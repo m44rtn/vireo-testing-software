@@ -9,6 +9,7 @@ The repository currently contains the following software:
 
 * `flat`, the source code of an assembly file that generates a divide by zero exception on purpose by executing `int 0`;
 * `conway`, a C program that simulates Conway's Game of Life, it is compiled into an ELF binary named `conway.elf`.
+* `breaker`, a C program that tests all system calls supported by the kernel; it uses vireo-syslib (repository not public yet)
 
 ## Building and more information
 For more information, and information on how to build the software, please refer to the README included in the folders of the respective software.
