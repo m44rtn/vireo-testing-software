@@ -21,14 +21,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "lib/memory.h"
+#include "lib/kernel.h"
 #include "lib/screen.h"
 
 
 void main(void)
 {
-    screen_print("Breaker for Vireo-II v0.1-pre2\n");
+    screen_clear();
+    screen_print("Breaker for ");
+    char *ver = kernel_get_version_str();
+    screen_print((const char *) ver);
+    screen_print("\n");
+
+    vfree(ver);
+
     screen_print("(c) 2021 MIT licensed\n");
     screen_print("==============================\n\n");
+
+    screen_print("This program will continue in 10 seconds...\n");
+    
+    kernel_sleep(10 * 1000);
 
     screen_set_color((SCREEN_COLOR_BLACK << 4) | SCREEN_COLOR_GREEN);
     screen_print("OK.\n");
