@@ -24,24 +24,50 @@ SOFTWARE.
 #include "lib/memory.h"
 #include "lib/kernel.h"
 #include "lib/screen.h"
-
+#include "lib/disk.h"
+#include "lib/program.h"
+#include "lib/util.h"
 
 void main(void)
 {
     screen_clear();
     screen_print("Breaker for ");
+    
     char *ver = kernel_get_version_str();
     screen_print((const char *) ver);
     screen_print("\n");
+    
 
     vfree(ver);
 
     screen_print("(c) 2021 MIT licensed\n");
     screen_print("==============================\n\n");
 
-    screen_print("This program will continue in 10 seconds...\n");
+    screen_print("This program will continue in 3 seconds...\n");
     
-    kernel_sleep(10 * 1000);
+    kernel_sleep(3 * 1000);
+
+    partition_info_t *p = disk_get_partition_info((char *) "HD0P0");
+    char s[128];
+    str_add_val(&s[0], "starting sector: %i\n", p->starting_sector);
+    screen_print(&s[0]);
+    vfree(p);
+
+    disk_info_t *d = disk_get_drive_list();
+    str_add_val(&s[0], "disk sector size: %i\n\0", d[0].sector_size);
+    screen_print(&s[0]);
+    str_add_val(&s[0], "disk size (in bytes): %i\n\0", d[0].disk_size);
+    screen_print(&s[0]);
+    vfree(p);
+    
+    screen_print("Will start conway.elf in 3 seconds:\n");
+    
+    kernel_sleep(3 * 1000);
+    
+    err_t e = program_start_new("CD0/TEST/CONWAY.ELF\0", main);
+    str_add_val(&s[0], "error: %x\n\0", e);
+    screen_print(&s[0]);
+    
 
     screen_set_color((SCREEN_COLOR_BLACK << 4) | SCREEN_COLOR_GREEN);
     screen_print("OK.\n");
