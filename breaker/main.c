@@ -101,7 +101,7 @@ void main(void)
     
     kernel_sleep(3 * 1000);
     
-    err_t e = program_start_new("CD0/TEST/CONWAY.ELF\0", main);
+    err_t e = program_start_new("CD0/TEST/CONWAY.ELF\0", (function_t) (main));
 
     // will not get here
     str_add_val(&s[0], "error: %x\n\0", e);
