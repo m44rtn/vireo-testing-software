@@ -10,11 +10,11 @@ xor eax, eax
 xor edi, edi
 xor ebx, ebx
 xor edx, edx
+xor ecx, ecx
 xor esi, esi
 
-jmp main ; launch program
+call main ; launch program
 
-; just to be absolutely sure it halts when it gets here
-hlt
-jmp $
-jmp $
+popad
+
+ret

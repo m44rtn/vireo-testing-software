@@ -27,9 +27,19 @@ SOFTWARE.
 #include "lib/disk.h"
 #include "lib/program.h"
 #include "lib/util.h"
+#include "lib/driver.h"
+#include "lib/api.h"
+
+#define PROGRAM_NAME    "BREAKER"
+#include "lib/debug.h"
+
+void api_handler(void *req);
 
 void main(void)
 {
+    // check if the syscalls exist
+    assert(debug_nop());
+
     screen_clear();
     screen_print("Breaker for ");
     
@@ -48,7 +58,7 @@ void main(void)
     kernel_sleep(3 * 1000);
 
     partition_info_t *p = disk_get_partition_info((char *) "HD0P0");
-    char s[128];
+    char *s = valloc(128);
     str_add_val(&s[0], "starting sector: %i\n", p->starting_sector);
     screen_print(&s[0]);
     vfree(p);
@@ -60,18 +70,53 @@ void main(void)
     screen_print(&s[0]);
     vfree(p);
     
+    screen_print("Will start register, execute and de-register driver 'drv' in 3 seconds:\n");
+    kernel_sleep(3000);
+    uint32_t *params = valloc(5 * sizeof(uint32_t)); // not the right way to do it (allocating prefered)
+    memset(s, 128, 0);
+    str_add_val(&s[0], "&params: %x \n\0", (uint32_t) &params[0]);
+    screen_print(&s[0]);
+    driver_add("CD0/TEST/DRV.DRV", 1);
+
+    screen_clear();
+
+    api_space_t api = api_get_api_space((function_t) api_handler);
+    syscall_hdr_t test = {.system_call = (api_space_t) (api + 3u)};
+
+    screen_print("\n");
+    PERFORM_SYSCALL(&test);
+
+    // try to remove a reserved kernel api space
+    api_free_api_space(0xc00); 
+    assert(debug_nop());
+
+    // oops, sorry wrong one! :P
+    api_free_api_space((api_space_t) (api + 3u));
+    PERFORM_SYSCALL(&test);
+    
+    screen_set_color((SCREEN_COLOR_BLACK << 4) | SCREEN_COLOR_GREEN);
+    screen_print("OK.\n");
+    screen_set_color(SCREEN_COLOR_DEFAULT);
+    
     screen_print("Will start conway.elf in 3 seconds:\n");
     
     kernel_sleep(3 * 1000);
     
     err_t e = program_start_new("CD0/TEST/CONWAY.ELF\0", main);
+
+    // will not get here
     str_add_val(&s[0], "error: %x\n\0", e);
     screen_print(&s[0]);
-    
-
-    screen_set_color((SCREEN_COLOR_BLACK << 4) | SCREEN_COLOR_GREEN);
-    screen_print("OK.\n");
-    screen_set_color(SCREEN_COLOR_DEFAULT);
 
     while(1);
+}
+
+void api_handler(void *req)
+{
+    syscall_hdr_t *hdr = req;
+
+    screen_print("API SPACE WORKS! :)\n");
+    screen_print("SYSCALL: ");
+    screen_print(intstr(hdr->system_call));
+    screen_print("\n");
 }

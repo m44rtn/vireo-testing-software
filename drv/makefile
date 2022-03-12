@@ -4,7 +4,7 @@ PROJDIRS := ./
 OBJDIR   := bin
 
 # output file
-OFILE := breaker.elf
+OFILE := drv.drv
 
 SRCFILES = $(shell find $(PROJDIRS) -type f -name "*.c")
 HDRFILES := $(shell find $(PROJDIRS) -type f -name "*.h")
@@ -39,7 +39,7 @@ AC := nasm
 .PHONY: all clean todo run assembly iso
 
 all: clean $(OBJFILES) $(ASOBJFILES)
-	@$(CC) -Ilib -T linker.ld -o $(OFILE) start.o $(LDOBJFILES) $(LDASOBJFILES) bin/libvireo_sys.a -lgcc -pie -static -ffreestanding -O2 -nostdlib -fpie
+	@$(CC) -T linker.ld -o $(OFILE) start.o $(LDOBJFILES) $(LDASOBJFILES) bin/libvireo_sys.a -lgcc -pie -static -ffreestanding -O2 -nostdlib -fpie
 
 
 # adds conway.elf to the testing .iso for the Vireo kernel

@@ -16,5 +16,4 @@ xor esi, esi
 call main ; launch program
 
 popad
-
 ret
