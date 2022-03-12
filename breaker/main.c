@@ -47,7 +47,6 @@ void main(void)
     screen_print((const char *) ver);
     screen_print("\n");
     
-
     vfree(ver);
 
     screen_print("(c) 2021 MIT licensed\n");
@@ -72,7 +71,7 @@ void main(void)
     
     screen_print("Will start register, execute and de-register driver 'drv' in 3 seconds:\n");
     kernel_sleep(3000);
-    uint32_t *params = valloc(5 * sizeof(uint32_t)); // not the right way to do it (allocating prefered)
+    uint32_t *params = valloc(5 * sizeof(uint32_t));
     memset(s, 128, 0);
     str_add_val(&s[0], "&params: %x \n\0", (uint32_t) &params[0]);
     screen_print(&s[0]);
