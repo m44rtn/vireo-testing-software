@@ -96,7 +96,7 @@ void main(void)
 
     screen_print("Saving file...\n");
     char *test_file = (char *) "THIS IS A TEST!!!!!!!!!!!!\n haha!";
-    fs_write_file((char *) "HD0P0/TEST/FILE.TXT", test_file, strlen(test_file) + 1, FAT_FILE_ATTRIB_FILE);
+    fs_write_file((char *) "HD0P0/FILE.TXT", test_file, strlen(test_file) + 1, FAT_FILE_ATTRIB_FILE);
     
     screen_set_color((SCREEN_COLOR_BLACK << 4) | SCREEN_COLOR_GREEN);
     screen_print("OK.\n");
