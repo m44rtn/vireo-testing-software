@@ -1,6 +1,6 @@
 /*
 MIT license
-Copyright (c) 2021 Maarten Vermeulen
+Copyright (c) 2021-2022 Maarten Vermeulen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@ SOFTWARE.
 #include "lib/util.h"
 #include "lib/driver.h"
 #include "lib/api.h"
+#include "lib/fs.h"
 
 #define PROGRAM_NAME    "BREAKER"
 #include "lib/debug.h"
@@ -49,7 +50,7 @@ void main(void)
     
     vfree(ver);
 
-    screen_print("(c) 2021 MIT licensed\n");
+    screen_print("(c) 2021-2022 MIT licensed\n");
     screen_print("==============================\n\n");
 
     screen_print("This program will continue in 3 seconds...\n");
@@ -89,9 +90,13 @@ void main(void)
     api_free_api_space(0xc00); 
     assert(debug_nop());
 
-    // oops, sorry wrong one! :P
+    // oops, sorry, wrong one! :P
     api_free_api_space((api_space_t) (api + 3u));
     PERFORM_SYSCALL(&test);
+
+    screen_print("Saving file...\n");
+    char *test_file = (char *) "THIS IS A TEST!!!!!!!!!!!!\n haha!";
+    fs_write_file((char *) "HD0P0/TEST/FILE.TXT", test_file, strlen(test_file) + 1, FAT_FILE_ATTRIB_FILE);
     
     screen_set_color((SCREEN_COLOR_BLACK << 4) | SCREEN_COLOR_GREEN);
     screen_print("OK.\n");
