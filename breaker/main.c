@@ -36,7 +36,7 @@ SOFTWARE.
 
 void api_handler(void *req);
 
-void main(void)
+int main(void)
 {
     // check if the syscalls exist
     assert(debug_nop());
@@ -112,7 +112,7 @@ void main(void)
     str_add_val(&s[0], "error: %x\n\0", e);
     screen_print(&s[0]);
 
-    while(1);
+    return 0;
 }
 
 void api_handler(void *req)
