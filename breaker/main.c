@@ -78,8 +78,6 @@ int main(void)
     screen_print(&s[0]);
     driver_add("CD0/TEST/DRV.DRV", 1);
 
-    screen_clear();
-
     api_space_t api = api_get_api_space((function_t) api_handler);
     syscall_hdr_t test = {.system_call = (api_space_t) (api + 3u)};
 
