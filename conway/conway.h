@@ -24,6 +24,9 @@ SOFTWARE.
 #ifndef __CONWAY_H__
 #define __CONWAY_H__
 
+#include "lib/types.h"
+
 void conways_game_of_life(void);
+char conway_get_screen_byte(char *buffer, uint32_t x, uint32_t y);
 
 #endif
