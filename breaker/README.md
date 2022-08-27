@@ -4,7 +4,7 @@ This program is used to test most system calls of the Vireo-II kernel. At some p
 
 ## Prerequisites for building
 - `make`
-- a cross `GCC (i686-elf)' and `binutils (i686-elf)`
+- a cross `GCC (i686-elf)` and `binutils (i686-elf)`
 - `nasm`
 
 ## Building the software
