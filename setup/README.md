@@ -10,6 +10,12 @@ and Vireo are capable of copying their own files from a CD/DVD onto a harddisk a
 the goals set for kernel-v0.1 of the Vireo-II kernel.
 
 ## Prerequisites for building
+Vireo syslib header files should be installed into ./lib/*.
+
+- `make`
+- a cross `GCC (i686-elf)` and `binutils (i686-elf)`
+- `nasm`
 
 ## Building the software
+- run `make`
 
