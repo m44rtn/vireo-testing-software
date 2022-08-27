@@ -52,8 +52,6 @@ void conways_game_of_life(void)
     err_t err; // ignored
     screen_info = screen_get_info(&err);
 
-    // screen_print("hello from conway.elf!\n");
-
     conway_fillScreen();
     
     while(1)
@@ -165,16 +163,16 @@ static void conway_fillScreen(void)
 
 static uint8_t conway_check_neighbours(char *buffer, uint32_t x, uint32_t y)
 {
-    uint32_t xmax = x + 2; // y=0, x=0, xmax=1
+    uint32_t xmax = x + 2;
     uint8_t cells = 0;
 
     // top & bottom
-    for(uint32_t tx = (x == 0) ? x : x - 1; tx < xmax; ++tx) // tx=1
+    for(uint32_t tx = (x == 0) ? x : x - 1; tx < xmax; ++tx)
     {
-        if(y > 0 && conway_get_screen_byte(buffer, tx, y - 1) == 'X') // false
+        if(y > 0 && conway_get_screen_byte(buffer, tx, y - 1) == 'X')
             cells++;
         
-        if(conway_get_screen_byte(buffer, tx, y + 1) == 'X') // true
+        if(conway_get_screen_byte(buffer, tx, y + 1) == 'X')
             cells++;
     }
     
