@@ -2,10 +2,6 @@ PROJDIRS := ./
 
 # called OBJDIR but is actually kernel.sys dir
 OBJDIR   := bin
-VM_NAME  := "BirdOS"
-
-# any modules/objects not to be included in the final build
-#OBJIGNORE := core/misc/conway.o
 
 # output file
 OFILE := conway.elf
@@ -43,12 +39,7 @@ AC := nasm
 .PHONY: all clean todo run assembly iso
 
 all: clean $(OBJFILES) $(ASOBJFILES)
-	@$(CC) -T linker.ld -o $(OFILE) start.o $(LDOBJFILES) $(LDASOBJFILES) bin/libvireo_sys.a -lgcc -pie -static -ffreestanding -O2 -nostdlib -fpie
-
-# adds conway.elf to the testing .iso for the Vireo kernel
-iso: all
-	cp $(OFILE) ../grub/test/$(OFILE)
-	grub-mkrescue -o ../birdos.iso ../grub/
+	@$(CC) -Ilib -T linker.ld -o $(OFILE) start.o $(LDOBJFILES) $(LDASOBJFILES) bin/libvireo_sys.a -lgcc -pie -static -ffreestanding -O2 -nostdlib -fpie
 
 todo: 
 	-@for file in $(ALLFILES:Makefile=); do fgrep -H -e TODO -e FIXME $$file; done; true
@@ -65,4 +56,4 @@ clean:
 
 # creates a map of all function
 map:
-	@$(LD) -Map=kernel.map -T linker.ld -o $(OFILE) conway/start.o $(LDOBJFILES) $(LDASOBJFILES)
+	@$(LD) -Map=kernel.map -T linker.ld -o $(OFILE) start.o $(LDOBJFILES) $(LDASOBJFILES) bin/libvireo_sys.a 

@@ -23,21 +23,22 @@ SOFTWARE.
 
 #include "conway.h"
 
-#include "include/types.h"
+// syslib
+#include "lib/screen.h"
+#include "lib/kernel.h"
+#include "lib/exit_code.h"
 
-#include "screen/screen_basic.h"
-
-#include "util/util.h"
+screen_info_t *screen_info = NULL;
 
 static void conway_fillScreen(void);
 static uint8_t conway_check_neighbours(uint32_t x, uint32_t y);
 static void conway_shouldIBeAliveOrNotAndMakeItSo(uint32_t x, uint32_t y);
 
-void main(void)
+int main(void)
 {
-    //while(1);
-    screen_basic_init();
     conways_game_of_life();
+
+    return EXIT_CODE_GLOBAL_SUCCESS;
 }
 
 void conways_game_of_life(void)
@@ -45,21 +46,23 @@ void conways_game_of_life(void)
     uint32_t x, y;
     uint8_t neighbours;
 
-    print("hello from conway.elf!\n");
+    err_t err; // ignored
+    screen_info = screen_get_info(&err);
 
-    screen_basic_clear_screen();
+    screen_print("hello from conway.elf!\n");
+
 
     conway_fillScreen();
     
     while(1)
     {
-        ticks(); // generates the speed since the binary could not use the PIT interrupt for the 
-                 // standard sleep() function in ../core/util/util.c
-        for(y = 0; y < 25; ++y)
+        kernel_sleep(16); // ~ 60 fps
+
+        for(y = 0; y < screen_info->height; ++y)
         {
-            for(x = 0; x < 80; ++x)
+            for(x = 0; x < screen_info->width; ++x)
             {
-                if(screen_basic_getchar(x, y) != 'X')
+                if(screen_get_byte_at(x, y, &err) != 'X')
                 {
                     conway_shouldIBeAliveOrNotAndMakeItSo(x, y);
                     continue;
@@ -68,11 +71,9 @@ void conways_game_of_life(void)
                 neighbours = conway_check_neighbours(x, y);
 
                 if(neighbours < 2 || neighbours > 3) 
-                    screen_basic_putchar(x, y, ' ');
-                
+                    screen_print_at(" ", x, y);
           }
         }
-
         
     }
 }
@@ -83,33 +84,34 @@ static void conway_fillScreen(void)
 
     for(y = 0; y < 25; ++y)
             for(x = 0; x < 80; ++x)
-                if((!y || x % 2 || y % 3) || (x % 5 && y % 7)) screen_basic_putchar(x, y, 'X');
+                if((!y || x % 2 || y % 3) || (x % 5 && y % 7)) screen_print_at("X", x, y);
 }
 
 static uint8_t conway_check_neighbours(uint32_t x, uint32_t y)
 {
     uint32_t xa;
     uint8_t live_cells = 0;
+    err_t err; // ignored
 
-    uint8_t isxScreenWidth =  !((x+1) == SCREEN_BASIC_WIDTH);
+    uint8_t isxScreenWidth =  !((x+1) == screen_info->width);
 
     /* check the three places above us (if there's a row above us) */
     if(y > 0)
         for(xa = (x <= 0) ? 0 : x-1; xa <= (x + isxScreenWidth); ++xa)
-            if(screen_basic_getchar(xa, y-1) == 'X') ++live_cells;
+            if(screen_get_byte_at(xa, y-1, &err) == 'X') ++live_cells;
     
     /* check our row */
     if(x > 0)
-        if(screen_basic_getchar(x-1, y) == 'X') ++live_cells;
+        if(screen_get_byte_at(x-1, y, &err) == 'X') ++live_cells;
     
-    if(x+1 <= SCREEN_BASIC_WIDTH)
-        if(screen_basic_getchar(x+1, y) == 'X') ++live_cells;
+    if(x+1 <= screen_info->width)
+        if(screen_get_byte_at(x+1, y, &err) == 'X') ++live_cells;
     
     
     /* check row below us if there is one */
-    if(y < SCREEN_BASIC_HEIGHT)
+    if(y < screen_info->height)
         for(xa = (x <= 0) ? 0 : x-1; xa <= (x + isxScreenWidth); ++xa)
-            if(screen_basic_getchar(xa, y+1) == 'X') ++live_cells;
+            if(screen_get_byte_at(xa, y+1, &err) == 'X') ++live_cells;
 
     return live_cells;
 
@@ -118,5 +120,5 @@ static uint8_t conway_check_neighbours(uint32_t x, uint32_t y)
 static void conway_shouldIBeAliveOrNotAndMakeItSo(uint32_t x, uint32_t y)
 {
     if(conway_check_neighbours(x, y) == 3)
-        screen_basic_putchar(x, y, 'X');
+        screen_print_at("X", x, y);
 }
