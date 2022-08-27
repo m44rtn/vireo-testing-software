@@ -1,0 +1,32 @@
+# This file tells the setup program which files should be copied where.
+#
+# The format is as follows:
+# [path to file] [where to copy]
+#
+# places to copy:
+# s[number] - sector to copy to (LBA number)
+# [path]    - path to copy to (non-existing dirs will be created 
+#             automatically)
+#
+# A path starting with '/' means that the file listed is read from/written to
+# the already selected disk (the slash signifies the root of that disk). For 
+# the [path to file] this is the bootdisk.
+# For the [where to copy] this is the disk currently hardcoded into
+# the program (currently HD0P0).
+# This is also the case for sectors (s[number]), another disk cannot be specified for sectors.
+#
+
+
+# boot files
+/INSTALL/SYSLINUX/LDLINUX.SYS /LDLINUX.SYS
+/INSTALL/SYSLINUX/LDLINUX.BSS s0 /LDLINUX.SYS
+# /INSTALL/GRUB/GRUB.CFG /BOOT/GRUB.CFG
+
+# kernel files
+/INSTALL/VIREO.SYS /VIREO.SYS
+
+# config files
+/INSTALL/CONFIG /CONFIG
+
+# applications
+/TEST/CONWAY.ELF /CONWAY.ELF
