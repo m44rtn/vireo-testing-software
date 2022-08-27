@@ -27,12 +27,15 @@ SOFTWARE.
 #include "lib/screen.h"
 #include "lib/kernel.h"
 #include "lib/exit_code.h"
+#include "lib/util.h"
+
+#define PROGRAM_NAME "CONWAY"
+#include "lib/debug.h"
 
 screen_info_t *screen_info = NULL;
 
 static void conway_fillScreen(void);
-static uint8_t conway_check_neighbours(uint32_t x, uint32_t y);
-static void conway_shouldIBeAliveOrNotAndMakeItSo(uint32_t x, uint32_t y);
+static uint8_t conway_check_neighbours(char *buffer, uint32_t x, uint32_t y);
 
 int main(void)
 {
@@ -49,76 +52,144 @@ void conways_game_of_life(void)
     err_t err; // ignored
     screen_info = screen_get_info(&err);
 
-    screen_print("hello from conway.elf!\n");
-
-
     conway_fillScreen();
     
     while(1)
     {
-        kernel_sleep(16); // ~ 60 fps
+        kernel_sleep(64); // ~ 16 fps
+        void *b_screen = screen_get_buffer(&err);
 
+        assert(!err);
+        
         for(y = 0; y < screen_info->height; ++y)
         {
             for(x = 0; x < screen_info->width; ++x)
             {
-                if(screen_get_byte_at(x, y, &err) != 'X')
-                {
-                    conway_shouldIBeAliveOrNotAndMakeItSo(x, y);
-                    continue;
-                }
+                neighbours = conway_check_neighbours(b_screen, x, y);
+                char c = conway_get_screen_byte(b_screen, x, y);
 
-                neighbours = conway_check_neighbours(x, y);
-
-                if(neighbours < 2 || neighbours > 3) 
+                if(neighbours == 3)
+                    screen_print_at("X", x, y);
+                else if(c == 'X' && neighbours == 2)
+                    screen_print_at("X", x, y);
+                else
                     screen_print_at(" ", x, y);
           }
         }
-        
+
+        vfree(b_screen);
     }
 }
 
 static void conway_fillScreen(void)
 {
-    uint32_t x, y;
+    screen_clear();
 
-    for(y = 0; y < 25; ++y)
-            for(x = 0; x < 80; ++x)
-                if((!y || x % 2 || y % 3) || (x % 5 && y % 7)) screen_print_at("X", x, y);
+    // XX
+    // XX
+    screen_print_at("X", 1, 5);
+    screen_print_at("X", 2, 5);
+    screen_print_at("X", 1, 6);
+    screen_print_at("X", 2, 6);
+
+    //       XX
+    //      X  
+    //     X    
+    //     X   
+    //     X   
+    //      X
+    //       XX
+    screen_print_at("X", 14, 2);
+    screen_print_at("X", 13, 2);
+    screen_print_at("X", 12, 3);
+    screen_print_at("X", 11, 4);
+    screen_print_at("X", 11, 5);
+    screen_print_at("X", 11, 6);
+    screen_print_at("X", 12, 7);
+    screen_print_at("X", 13, 8);
+    screen_print_at("X", 14, 8);
+
+    // X
+    screen_print_at("X", 15, 5);
+
+    // X
+    //  X
+    //  XX
+    //  X
+    // X
+    screen_print_at("X", 16, 3);
+    screen_print_at("X", 17, 4);
+    screen_print_at("X", 17, 5);
+    screen_print_at("X", 18, 5);
+    screen_print_at("X", 17, 6);
+    screen_print_at("X", 16, 7);
+
+    //   X
+    // XX
+    // XX
+    // XX
+    //   X
+    screen_print_at("X", 23, 1);
+
+    screen_print_at("X", 21, 2);
+    screen_print_at("X", 21, 3);
+    screen_print_at("X", 21, 4);
+    screen_print_at("X", 22, 2);
+    screen_print_at("X", 22, 3);
+    screen_print_at("X", 22, 4);
+
+    screen_print_at("X", 23, 5);
+
+    // X
+    // X
+    // 
+    // 
+    // 
+    // X
+    // X
+    screen_print_at("X", 25, 0);
+    screen_print_at("X", 25, 1);
+    screen_print_at("X", 25, 5);
+    screen_print_at("X", 25, 6);
+
+
+    // XX
+    // XX
+    screen_print_at("X", 35, 2);
+    screen_print_at("X", 36, 2);
+    screen_print_at("X", 35, 3);
+    screen_print_at("X", 36, 3);
 }
 
-static uint8_t conway_check_neighbours(uint32_t x, uint32_t y)
+static uint8_t conway_check_neighbours(char *buffer, uint32_t x, uint32_t y)
 {
-    uint32_t xa;
-    uint8_t live_cells = 0;
-    err_t err; // ignored
+    uint32_t xmax = x + 2;
+    uint8_t cells = 0;
 
-    uint8_t isxScreenWidth =  !((x+1) == screen_info->width);
+    // top & bottom
+    for(uint32_t tx = (x == 0) ? x : x - 1; tx < xmax; ++tx)
+    {
+        if(y > 0 && conway_get_screen_byte(buffer, tx, y - 1) == 'X')
+            cells++;
+        
+        if(conway_get_screen_byte(buffer, tx, y + 1) == 'X')
+            cells++;
+    }
+    
+    // left & right
+    if(x > 0 && conway_get_screen_byte(buffer, x - 1, y) == 'X')
+        cells++;
+    if(conway_get_screen_byte(buffer, x + 1, y) == 'X')
+        cells++;
 
-    /* check the three places above us (if there's a row above us) */
-    if(y > 0)
-        for(xa = (x <= 0) ? 0 : x-1; xa <= (x + isxScreenWidth); ++xa)
-            if(screen_get_byte_at(xa, y-1, &err) == 'X') ++live_cells;
-    
-    /* check our row */
-    if(x > 0)
-        if(screen_get_byte_at(x-1, y, &err) == 'X') ++live_cells;
-    
-    if(x+1 <= screen_info->width)
-        if(screen_get_byte_at(x+1, y, &err) == 'X') ++live_cells;
-    
-    
-    /* check row below us if there is one */
-    if(y < screen_info->height)
-        for(xa = (x <= 0) ? 0 : x-1; xa <= (x + isxScreenWidth); ++xa)
-            if(screen_get_byte_at(xa, y+1, &err) == 'X') ++live_cells;
-
-    return live_cells;
+    return cells;
 
 }
 
-static void conway_shouldIBeAliveOrNotAndMakeItSo(uint32_t x, uint32_t y)
+char conway_get_screen_byte(char *buffer, uint32_t x, uint32_t y)
 {
-    if(conway_check_neighbours(x, y) == 3)
-        screen_print_at("X", x, y);
+    if(x > screen_info->width || y > screen_info->height)
+        return ' ';
+
+    return buffer[(y * screen_info->width + x) * screen_info->depth];
 }
