@@ -36,7 +36,7 @@ SOFTWARE.
 
 void api_handler(void *req);
 
-void main(void)
+int main(void)
 {
     // check if the syscalls exist
     assert(debug_nop());
@@ -78,8 +78,6 @@ void main(void)
     screen_print(&s[0]);
     driver_add("CD0/TEST/DRV.DRV", 1);
 
-    screen_clear();
-
     api_space_t api = api_get_api_space((function_t) api_handler);
     syscall_hdr_t test = {.system_call = (api_space_t) (api + 3u)};
 
@@ -112,7 +110,7 @@ void main(void)
     str_add_val(&s[0], "error: %x\n\0", e);
     screen_print(&s[0]);
 
-    while(1);
+    return 0;
 }
 
 void api_handler(void *req)
