@@ -62,4 +62,4 @@ clean:
 
 # creates a map of all function
 map:
-	@$(LD) -Map=kernel.map -T linker.ld -o $(OFILE) conway/start.o $(LDOBJFILES) $(LDASOBJFILES)
+	@$(LD) -Map=kernel.map -T linker.ld -o $(OFILE) start.o $(LDOBJFILES) $(LDASOBJFILES) bin/libvireo_sys.a

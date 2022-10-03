@@ -29,6 +29,7 @@ SOFTWARE.
 #include "lib/util.h"
 #include "lib/driver.h"
 #include "lib/api.h"
+#include "lib/call.h"
 #include "lib/fs.h"
 
 #define PROGRAM_NAME    "BREAKER"
@@ -36,12 +37,14 @@ SOFTWARE.
 
 void api_handler(void *req);
 
-int main(void)
+int main(uint32_t argc, char **argv)
 {
+    char s[128];
+    
     // check if the syscalls exist
     assert(debug_nop());
 
-    screen_clear();
+    // screen_clear();
     screen_print("Breaker for ");
     
     char *ver = kernel_get_version_str();
@@ -52,13 +55,22 @@ int main(void)
 
     screen_print("(c) 2021-2022 MIT licensed\n");
     screen_print("==============================\n\n");
-
+    
     screen_print("This program will continue in 3 seconds...\n");
     
     kernel_sleep(3 * 1000);
 
+    str_add_val(&s[0], "\nargc: %x, ", (uint32_t) argc);
+    screen_print(&s[0]);
+
+    str_add_val(&s[0], "argv[0]: %s, ", (uint32_t) argv[0]);
+    screen_print(&s[0]);
+    str_add_val(&s[0], "argv[1]: %s, ", (uint32_t) argv[1]);
+    screen_print(&s[0]);
+    str_add_val(&s[0], "argv[2]: %s\n\n", (uint32_t) argv[2]);
+    screen_print(&s[0]);
+
     partition_info_t *p = disk_get_partition_info((char *) "HD0P0");
-    char *s = valloc(128);
     str_add_val(&s[0], "starting sector: %i\n", p->starting_sector);
     screen_print(&s[0]);
     vfree(p);
@@ -72,10 +84,6 @@ int main(void)
     
     screen_print("Will start register, execute and de-register driver 'drv' in 3 seconds:\n");
     kernel_sleep(3000);
-    uint32_t *params = valloc(5 * sizeof(uint32_t));
-    memset(s, 128, 0);
-    str_add_val(&s[0], "&params: %x \n\0", (uint32_t) &params[0]);
-    screen_print(&s[0]);
     driver_add("CD0/TEST/DRV.DRV", 1);
 
     api_space_t api = api_get_api_space((function_t) api_handler);
@@ -84,9 +92,11 @@ int main(void)
     screen_print("\n");
     PERFORM_SYSCALL(&test);
 
+    screen_print("Out of syscall\n");
+
     // try to remove a reserved kernel api space
     api_free_api_space(0xc00); 
-    assert(debug_nop());
+    assert(debug_nop()); // ensure that the request was ignored (i.e. the api space is still working)
 
     // oops, sorry, wrong one! :P
     api_free_api_space((api_space_t) (api + 3u));
@@ -104,7 +114,7 @@ int main(void)
     
     kernel_sleep(3 * 1000);
     
-    err_t e = program_start_new("CD0/TEST/CONWAY.ELF\0", (function_t) (main));
+    err_t e = program_start_new("CD0/CONWAY.ELF\0", (function_t) (main));
 
     // will not get here
     str_add_val(&s[0], "error: %x\n\0", e);
@@ -119,6 +129,6 @@ void api_handler(void *req)
 
     screen_print("API SPACE WORKS! :)\n");
     screen_print("SYSCALL: ");
-    screen_print(intstr(hdr->system_call));
+    screen_print(hexstr(hdr->system_call, 0));
     screen_print("\n");
 }
