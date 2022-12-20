@@ -126,9 +126,8 @@ int main(uint32_t argc, char **argv)
     screen_print(&s[0]);
     vfree(p);
     
-    screen_print("Will start PS/2 keyboard driver in 3 seconds:\n");
-    kernel_sleep(3000);
     driver_add("CD0/SYS/PS2KEYB.DRV", 1);
+    screen_print("\nStarted PS2KEYB.DRV (PS/2 keyboard driver)\n");
 
     api_space_t api = api_get_api_space((function_t) api_handler);
     syscall_hdr_t test = {.system_call = (api_space_t) (api + 3u)};
