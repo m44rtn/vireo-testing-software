@@ -31,11 +31,55 @@ SOFTWARE.
 #include "lib/api.h"
 #include "lib/call.h"
 #include "lib/fs.h"
+#include "lib/ps2keyb.h"
+#include "lib/scancode.h"
 
 #define PROGRAM_NAME    "BREAKER"
 #include "lib/debug.h"
 
 void api_handler(void *req);
+api_space_t keyboard_api_space(void);
+void start_conway(void);
+
+api_space_t keyboard_api_space(void)
+{
+    api_listing_t *apis = api_get_syscall_listing();
+
+    for(uint32_t i = 0x00; i < 0xFF; i++)
+    {
+        if(apis[i].filename[0] == '\0')
+            continue;
+
+        if(!strcmp_until(&apis[i].filename[0], "PS2KEYB.DRV", sizeof(apis[i].filename)))
+            return apis[i].start_syscall_space; 
+    }
+
+    return 0;
+}
+
+void start_conway(void)
+{
+    api_space_t keyb_space = keyboard_api_space();
+
+    assert(keyb_space);
+    ps2keyb_api_req r = {
+        .hdr.system_call = (syscall_t) (keyb_space | PS2KEYB_CALL_LAST_KEY)
+    };
+    
+    screen_print("Will start conway.elf when you press [ENTER]:\n");
+
+    uint16_t keycode = KEYCODE_UNUSED;
+    while(keycode != KEYCODE_ENTER && keycode != KEYCODE_KEYP_ENTER)
+    {
+        PERFORM_SYSCALL(&r);
+        keycode = (uint16_t) r.hdr.response;
+    }
+    
+    if(program_start_new("CD0/CONWAY.ELF"))
+        screen_print("Error executing conway");
+
+    // should not get here
+}
 
 int main(uint32_t argc, char **argv)
 {
@@ -82,9 +126,9 @@ int main(uint32_t argc, char **argv)
     screen_print(&s[0]);
     vfree(p);
     
-    screen_print("Will start register, execute and de-register driver 'drv' in 3 seconds:\n");
+    screen_print("Will start PS/2 keyboard driver in 3 seconds:\n");
     kernel_sleep(3000);
-    driver_add("CD0/TEST/DRV.DRV", 1);
+    driver_add("CD0/SYS/PS2KEYB.DRV", 1);
 
     api_space_t api = api_get_api_space((function_t) api_handler);
     syscall_hdr_t test = {.system_call = (api_space_t) (api + 3u)};
@@ -109,18 +153,10 @@ int main(uint32_t argc, char **argv)
     screen_set_color((SCREEN_COLOR_BLACK << 4) | SCREEN_COLOR_GREEN);
     screen_print("OK.\n");
     screen_set_color(SCREEN_COLOR_DEFAULT);
-    
-    screen_print("Will start conway.elf in 3 seconds:\n");
-    
-    kernel_sleep(3 * 1000);
-    
-    err_t e = program_start_new("CD0/CONWAY.ELF\0", (function_t) (main));
 
-    // will not get here
-    str_add_val(&s[0], "error: %x\n\0", e);
-    screen_print(&s[0]);
+    start_conway();
 
-    return 0;
+    return EXIT_CODE_GLOBAL_GENERAL_FAIL;
 }
 
 void api_handler(void *req)
